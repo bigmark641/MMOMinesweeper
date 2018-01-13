@@ -3,8 +3,6 @@
 
 //TODO: remove these debugging lines
 var minesweeperEngine = new MinesweeperEngine();
-minesweeperEngine.revealSquare(10, 20);
-minesweeperEngine.resetArea(5, 5);
 "Use the debugger to call minesweeperEngine.revealSquare(x,y).";
 
 
@@ -16,10 +14,10 @@ function MinesweeperEngine() {
     // PRIVATE MEMBER CONSTANTS //
     ////////////////////////////// 
 
-    var NUMBER_OF_MINES = 199;
-    var BOARD_WIDTH = 16;
-    var BOARD_HEIGHT = 30;
-    var RESET_RADIUS = 4;
+    var NUMBER_OF_MINES = 10; //500;
+    var BOARD_WIDTH = 9; //56;
+    var BOARD_HEIGHT = 9; //36;
+    var RESET_RADIUS = 1; //4;
     var REVEAL_RADIUS = 1;
     var MINE_COUNT_RADIUS = 1;
 
@@ -35,53 +33,7 @@ function MinesweeperEngine() {
     // PUBLIC FUNCTIONALITY // 
     //////////////////////////
 
-    self.resetArea = function (x, y) {
-
-        //Get bounds to reset
-        if (getSurroundingMinX(x, RESET_RADIUS) === getSurroundingMinX(x, RESET_RADIUS + 1))
-            var minX = getSurroundingMinX(x, RESET_RADIUS);
-        else
-            var minX = getSurroundingMinX(x, RESET_RADIUS) + 1;
-        if (getSurroundingMaxX(x, RESET_RADIUS) === getSurroundingMaxX(x, RESET_RADIUS + 1))
-            var maxX = getSurroundingMaxX(x, RESET_RADIUS);
-        else
-            var maxX = getSurroundingMaxX(x, RESET_RADIUS) - 1;
-        if (getSurroundingMinY(y, RESET_RADIUS) === getSurroundingMinY(y, RESET_RADIUS + 1))
-            var minY = getSurroundingMinY(y, RESET_RADIUS);
-        else
-            var minY = getSurroundingMinY(y, RESET_RADIUS) + 1;
-        if (getSurroundingMaxY(y, RESET_RADIUS) === getSurroundingMaxY(y, RESET_RADIUS + 1))
-            var maxY = getSurroundingMaxY(y, RESET_RADIUS);
-        else
-            var maxY = getSurroundingMaxY(y, RESET_RADIUS) - 1;
-
-        //Count mines
-        var mineCount = 0;
-        for (var i = minX; i <= maxX; i++)
-            for (var j = minY; j <= maxY; j++)
-                if (board[i][j].isMine)
-                    mineCount++;
-
-        //Clear area
-        for (var i = minX; i <= maxX; i++) {
-            for (var j = minY; j <= maxY; j++) {
-                board[i][j].isMine = false;
-                board[i][j].mineCount = 0;
-                board[i][j].isRevealed = false;
-            }
-        }
-
-        //Add mines
-        randomlyAddMines(mineCount, minX, minY, maxX, maxY);
-
-        //Renumber
-        numberSquares(getSurroundingMinX(x, RESET_RADIUS), getSurroundingMinY(y, RESET_RADIUS), getSurroundingMaxX(x, RESET_RADIUS), getSurroundingMaxY(y, RESET_RADIUS));
-
-        //Print
-        printVisibleBoard();
-    }
-
-    self.revealSquare = function (x, y) {
+    self.revealSquare = function (x, y, suppressPrint) {
 
         //Initialize board if first revealed square
         var revealedSquares = 0
@@ -92,34 +44,63 @@ function MinesweeperEngine() {
         if (revealedSquares === 0)
             initializeBoard(x, y);
 
-        //Reveal square
-        board[x][y].isRevealed = true;
-
-        //Handle loss
+        //Handle mine
         if (board[x][y].isMine) {
-            printVisibleBoard();
-            throw "You lose!";
+            //TODO: remove this line
+            process.stdout.write("\nYou hit a mine!\n");
+            resetArea(x, y);
+        } else {
+
+            //Reveal square
+            board[x][y].isRevealed = true;
+
+            //Reveal surrounding squares
+            if (board[x][y].mineCount === 0)
+                for (var i = getSurroundingMinX(x, REVEAL_RADIUS); i <= getSurroundingMaxX(x, REVEAL_RADIUS); i++)
+                    for (var j = getSurroundingMinY(y, REVEAL_RADIUS); j <= getSurroundingMaxY(y, REVEAL_RADIUS); j++)
+                        if (!board[i][j].isRevealed)
+                            self.revealSquare(i, j, true);
+
+            //Handle win
+            var unrevealedEmptySquares = 0
+            for (var i = 0; i < BOARD_WIDTH; i++)
+                for (var j = 0; j < BOARD_HEIGHT; j++)
+                    if (!board[i][j].isRevealed && !board[i][j].isMine)
+                        unrevealedEmptySquares++;
+            if (unrevealedEmptySquares === 0) {
+                printRevealedBoard();
+                throw "You win!!!";
+            }
         }
 
-        //Reveal surrounding squares if necessary
-        if (board[x][y].mineCount === 0)
-            for (var i = getSurroundingMinX(x, REVEAL_RADIUS); i <= getSurroundingMaxX(x, REVEAL_RADIUS); i++)
-                for (var j = getSurroundingMinY(y, REVEAL_RADIUS); j <= getSurroundingMaxY(y, REVEAL_RADIUS); j++)
-                    if (!board[i][j].isRevealed)
-                        self.revealSquare(i, j);
+        if (suppressPrint !== null && !suppressPrint)
+            printRevealedBoard();
+    };
 
-        //Handle win
-        var unrevealedEmptySquares = 0
-        for (var i = 0; i < BOARD_WIDTH; i++)
-            for (var j = 0; j < BOARD_HEIGHT; j++)
-                if (!board[i][j].isRevealed && !board[i][j].isMine)
-                    unrevealedEmptySquares++;
-        if (unrevealedEmptySquares === 0) {
-            printVisibleBoard();
-            throw "You win!";
+    self.getRevealedBoard = function () {
+
+        //Create board
+        var revealedBoard = [];
+        for (var x = 0; x < BOARD_WIDTH; x++) {
+            revealedBoard[x] = [];
+            for (var y = 0; y < BOARD_HEIGHT; y++) {
+
+                //Add revealed
+                if (board[x][y].isRevealed) {
+                    revealedBoard[x][y] = {
+                        isRevealed: true,
+                        mineCount: board[x][y].mineCount
+                    };
+
+                    //Add hidden
+                } else {
+                    revealedBoard[x][y] = {
+                        isRevealed: false
+                    };
+                }
+            }
         }
-
-        printVisibleBoard();
+        return revealedBoard;
     };
 
 
@@ -129,7 +110,7 @@ function MinesweeperEngine() {
 
     (function () {
         initializeEmptyBoard();
-        printVisibleBoard();
+        printRevealedBoard();
     })();
 
 
@@ -144,13 +125,14 @@ function MinesweeperEngine() {
             initializeEmptyBoard();
 
             //Place mines
-            randomlyAddMines(NUMBER_OF_MINES, 0, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1);
+            seedMines(NUMBER_OF_MINES, 0, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1);
+            printRevealedBoard();
 
             //Number squares
             numberSquares(0, 0, BOARD_WIDTH - 1, BOARD_HEIGHT - 1);
 
             //Validate and retry
-        } while (board[firstX][firstY].mineCount != 0);
+        } while (board[firstX][firstY].mineCount !== 0);
     }
 
     function initializeEmptyBoard() {
@@ -166,6 +148,44 @@ function MinesweeperEngine() {
         }
     }
 
+    function resetArea(x, y) {
+
+        //Get bounds to renumber
+        var renumberMinX = getSurroundingMinX(x, RESET_RADIUS);
+        var renumberMinY = getSurroundingMinY(y, RESET_RADIUS);
+        var renumberMaxX = getSurroundingMaxX(x, RESET_RADIUS);
+        var renumberMaxY = getSurroundingMaxY(y, RESET_RADIUS);
+
+        //Get bounds to remine
+        var remineMinX = getSurroundingMinX(x, RESET_RADIUS - 1);
+        var remineMinY = getSurroundingMinY(y, RESET_RADIUS - 1);
+        var remineMaxX = getSurroundingMaxX(x, RESET_RADIUS - 1);
+        var remineMaxY = getSurroundingMaxY(y, RESET_RADIUS - 1);
+
+        //Clear visibility
+        for (var i = renumberMinX; i <= renumberMaxX; i++)
+            for (var j = renumberMinY; j <= renumberMaxY; j++)
+                board[i][j].isRevealed = false;
+
+        //Count mines
+        var mineCount = 0;
+        for (var i = remineMinX; i <= remineMaxX; i++)
+            for (var j = remineMinY; j <= remineMaxY; j++)
+                if (board[i][j].isMine)
+                    mineCount++;
+
+        //Clear mines
+        for (var i = remineMinX; i <= remineMaxX; i++)
+            for (var j = remineMinY; j <= remineMaxY; j++)
+                board[i][j].isMine = false;
+
+        //Add mines
+        seedMines(mineCount, remineMinX, remineMinY, remineMaxX, remineMaxY);
+
+        //Renumber
+        numberSquares(renumberMinX, renumberMinY, renumberMaxX, renumberMaxY);
+    }
+
     function getSurroundingMineCount(x, y) {
         var mineCount = 0;
         for (var i = getSurroundingMinX(x, MINE_COUNT_RADIUS); i <= getSurroundingMaxX(x, MINE_COUNT_RADIUS); i++)
@@ -175,13 +195,21 @@ function MinesweeperEngine() {
         return mineCount;
     }
 
-    function randomlyAddMines(mineCount, minX, minY, maxX, maxY) {
+    function seedMines(mineCount, minX, minY, maxX, maxY) {
         for (var i = 0; i < mineCount; i++) {
             do {
                 var mineX = minX + Math.floor((1 + maxX - minX) * Math.random());
                 var mineY = minY + Math.floor((1 + maxY - minY) * Math.random());
             } while (board[mineX][mineY].isMine);
             board[mineX][mineY].isMine = true;
+        }
+    }
+
+    function numberSquares(minX, minY, maxX, maxY) {
+        for (var x = minX; x <= maxX; x++) {
+            for (var y = minY; y <= maxY; y++) {
+                board[x][y].mineCount = getSurroundingMineCount(x, y);
+            }
         }
     }
 
@@ -201,16 +229,9 @@ function MinesweeperEngine() {
         return BOARD_HEIGHT - y > radius ? y + radius : BOARD_HEIGHT - 1;
     }
 
-    function numberSquares(minX, minY, maxX, maxY) {
-        for (var x = minX; x <= maxX; x++) {
-            for (var y = minY; y < maxY; y++) {
-                board[x][y].mineCount = getSurroundingMineCount(x, y);
-            }
-        }
-    }
-
-    function printVisibleBoard() {
-        //This ugly method is intended for degubbing only
+    //TODO: Remove this function and all references to it
+    function printRevealedBoard() {
+        var revealedBoard = self.getRevealedBoard(); //board; //self.getRevealedBoard();
         process.stdout.write(" /--");
         for (var x = 0; x < BOARD_WIDTH; x++) {
             process.stdout.write(x + "-");
@@ -224,12 +245,11 @@ function MinesweeperEngine() {
             if (y < 10)
                 process.stdout.write(" ");
             for (var x = 0; x < BOARD_WIDTH; x++) {
-                //TODO: fix next line
-                if (true) //board[x][y].isRevealed)
-                    if (board[x][y].isMine)
-                        process.stdout.write("X");
+                if (revealedBoard[x][y].isRevealed) //true) //revealedBoard[x][y].isRevealed)
+                    if (revealedBoard[x][y].isMine)
+                        process.stdout.write("X" + "");
                     else
-                        process.stdout.write(board[x][y].mineCount + "");
+                        process.stdout.write(revealedBoard[x][y].mineCount + "");
                 else
                     process.stdout.write("-");
                 if (x !== BOARD_WIDTH - 1)
