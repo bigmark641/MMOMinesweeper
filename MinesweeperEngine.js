@@ -53,6 +53,7 @@ function MinesweeperEngine() {
 
             //Reveal square
             board[x][y].isRevealed = true;
+            board[x][y].isFlagged = false;
 
             //Reveal surrounding squares
             if (board[x][y].mineCount === 0)
@@ -77,6 +78,12 @@ function MinesweeperEngine() {
             printRevealedBoard();
     };
 
+    self.flagSquare = function (x, y) {
+        if (!board[x][y].isRevealed)
+            board[x][y].isFlagged = true;
+        printRevealedBoard();
+    }
+
     self.getRevealedBoard = function () {
 
         //Create board
@@ -89,18 +96,29 @@ function MinesweeperEngine() {
                 if (board[x][y].isRevealed) {
                     revealedBoard[x][y] = {
                         isRevealed: true,
-                        mineCount: board[x][y].mineCount
+                        mineCount: board[x][y].mineCount,
+                        isFlagged: board[x][y].isFlagged
                     };
 
                     //Add hidden
                 } else {
                     revealedBoard[x][y] = {
-                        isRevealed: false
+                        isRevealed: false,
+                        isFlagged: board[x][y].isFlagged
                     };
                 }
             }
         }
         return revealedBoard;
+    };
+
+    self.getRemainingMineCount = function () {
+        var flagCount = 0;
+        for (var x = 0; x < BOARD_WIDTH; x++)
+            for (var y = 0; y < BOARD_HEIGHT; y++)
+                if (board[x][y].isFlagged)
+                    flagCount++;
+        return NUMBER_OF_MINES - flagCount;
     };
 
 
@@ -142,7 +160,8 @@ function MinesweeperEngine() {
                 board[x][y] = {
                     isMine: false,
                     mineCount: 0,
-                    isRevealed: false
+                    isRevealed: false,
+                    isFlagged: false
                 };
             }
         }
@@ -176,8 +195,10 @@ function MinesweeperEngine() {
 
         //Clear mines
         for (var i = remineMinX; i <= remineMaxX; i++)
-            for (var j = remineMinY; j <= remineMaxY; j++)
+            for (var j = remineMinY; j <= remineMaxY; j++) {
                 board[i][j].isMine = false;
+                board[i][j].isFlagged = false;
+            }
 
         //Add mines
         seedMines(mineCount, remineMinX, remineMinY, remineMaxX, remineMaxY);
@@ -245,7 +266,9 @@ function MinesweeperEngine() {
             if (y < 10)
                 process.stdout.write(" ");
             for (var x = 0; x < BOARD_WIDTH; x++) {
-                if (revealedBoard[x][y].isRevealed) //true) //revealedBoard[x][y].isRevealed)
+                if (revealedBoard[x][y].isFlagged)
+                    process.stdout.write("F" + "");
+                else if (revealedBoard[x][y].isRevealed) //true) //revealedBoard[x][y].isRevealed)
                     if (revealedBoard[x][y].isMine)
                         process.stdout.write("X" + "");
                     else
@@ -255,7 +278,7 @@ function MinesweeperEngine() {
                 if (x !== BOARD_WIDTH - 1)
                     process.stdout.write("  ");
             }
-            process.stdout.write(" |" + y);
+            process.stdout.write("  |" + y);
             process.stdout.write("\n");
         }
         process.stdout.write(" \\--");
