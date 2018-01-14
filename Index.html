@@ -64,54 +64,81 @@
             var minesweeperEngine = new MinesweeperEngine();
             generateBoardHtml();
 
+            
             function generateBoardHtml() {
-
-                //Clear board
-                while (boardElement.firstChild)
-                    boardElement.removeChild(boardElement.firstChild);
 
                 //Get board data
                 var boardArray = minesweeperEngine.getRevealedBoard();
-                boardElement.setAttribute("style", "width: " + 50 * boardArray[0].length + "px");
+                boardElement.setAttribute("style", "width: " + 52 * boardArray.length + "px");
+                
+                //Initialize empty board
+                if (!Boolean(boardElement.firstElementChild)) {
 
-                //Build row
-                for (var i = 0; i < boardArray.length; i++) {
-                    var row = document.createElement("div");
-                    row.setAttribute("class", "row");
+                    //Build row
+                    for (var y = 0; y < boardArray[0].length; y++) {
+                        var rowElement = document.createElement("div");
+                        rowElement.setAttribute("class", "row");
 
-                    //Build cell
-                    for (var j = 0; j < boardArray[i].length; j++) {
-                        var cell = document.createElement("div");
+                        //Build cell
+                        for (var x = 0; x < boardArray.length; x++) {
+                            var cellElement = document.createElement("div");
 
-                        //Set data
-                        cell.setAttribute("data-x", i);
-                        cell.setAttribute("data-y", j);
+                            //Set data
+                            cellElement.setAttribute("data-x", x);
+                            cellElement.setAttribute("data-y", y);
 
-                        //Set classes
-                        if (boardArray[i][j].isRevealed) {
-                            cell.appendChild(document.createTextNode(boardArray[i][j].mineCount));
-                            cell.setAttribute("class", "cell revealed");
-                        } else if (boardArray[i][j].isFlagged) {
-                            cell.appendChild(document.createTextNode("F"));
-                            cell.setAttribute("class", "cell flagged");
-                        } else {
-                            cell.setAttribute("class", "cell unknown");
+                            //Set class
+                            cellElement.setAttribute("class", "cell unknown");
+
+                            //Set text
+                            var textElement = document.createTextNode("");
+
+                            //Set click handlers
+                            cellElement.addEventListener("click", function (e) {
+                                e.preventDefault();
+                                handleCellClick.call(this, "click");
+                                return false;
+                            });
+                            cellElement.addEventListener("contextmenu", function (e) {
+                                e.preventDefault();
+                                handleCellClick.call(this, "contextmenu");
+                                return false;
+                            });
+
+                            //Attach                            
+                            cellElement.appendChild(textElement);
+                            rowElement.appendChild(cellElement);
                         }
-
-                        //Set click handlers
-                        cell.addEventListener("click", function (e) {
-                            e.preventDefault();
-                            this.handleCellClick = handleCellClick;
-                            return this.handleCellClick("click");
-                        });
-                        cell.addEventListener("contextmenu", function (e) {
-                            e.preventDefault();
-                            this.handleCellClick = handleCellClick;
-                            return this.handleCellClick("contextmenu");
-                        });
-                        row.appendChild(cell);
+                        boardElement.appendChild(rowElement);
                     }
-                    boardElement.appendChild(row);
+                }
+
+                //Update existing board
+                for (var y = 0; y < boardElement.childNodes.length - 1; y++) {
+                    var rowElement = boardElement.childNodes[y + 1];
+                    for (var x = 0; x < rowElement.childNodes.length; x++) {
+                        var cellElement = rowElement.childNodes[x];
+
+                        //Set class and text
+                        var cellClass;
+                        var cellText;
+                        if (boardArray[x][y].isRevealed) {
+                            cellClass = "cell revealed";
+                            cellText = boardArray[x][y].mineCount;
+                        } else if (boardArray[x][y].isFlagged) {
+                            cellClass = "cell flagged";
+                            cellText = "F";
+                        } else {
+                            cellClass = "cell unknown";
+                            cellText = "";
+                        }
+                        if (cellElement.getAttribute("class") !== cellClass)
+                            cellElement.setAttribute("class", cellClass);
+                        if (cellElement.childNodes[0].textContent !== cellText) {
+                            cellElement.removeChild(cellElement.childNodes[0]);
+                            cellElement.appendChild(document.createTextNode(cellText));
+                        }
+                    }
                 }
 
                 //Set remaining mines
@@ -121,6 +148,7 @@
                 var remainingMineCount = minesweeperEngine.getRemainingMineCount();
                 remainingMineCountElement.appendChild(document.createTextNode(remainingMineCount));
             }
+            
 
             function handleCellClick(event) {
 
