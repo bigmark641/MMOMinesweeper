@@ -1,0 +1,151 @@
+<html>
+
+<head>
+    <script src="MinesweeperEngine.js"></script>
+    <style>
+        #board {
+            margin-top: 50px;
+        }
+
+        .row {
+            display: table-row;
+        }
+
+        .cell {
+            display: table-cell;
+            height: 50px;
+            width: 50px;
+            border: 1px solid black;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 36px;
+        }
+
+        .cell.unknown {
+            background-color: lightblue;
+        }
+
+        .cell.flagged {
+            background-color: yellow;
+            color: red;
+        }
+
+        .cell.revealed {
+            background-color: white;
+        }
+
+        #remaining-mines {
+            position: fixed;
+            top: 0px;
+            left: 44%;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 6px;
+            background: rgba(255, 255, 255, .5);
+            border: 2px solid black;
+            color: red;
+            font-size: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="remaining-mines">Remaining mines:
+        <span id="remaining-mine-count"></span>
+    </div>
+    <div id="board">
+    </div>
+    <script>
+        (function () {
+
+            //Initialize game
+            var boardElement = document.getElementById('board');
+            var minesweeperEngine = new MinesweeperEngine();
+            generateBoardHtml();
+
+            function generateBoardHtml() {
+
+                //Clear board
+                while (boardElement.firstChild)
+                    boardElement.removeChild(boardElement.firstChild);
+
+                //Get board data
+                var boardArray = minesweeperEngine.getRevealedBoard();
+                boardElement.setAttribute("style", "width: " + 50 * boardArray[0].length + "px");
+
+                //Build row
+                for (var i = 0; i < boardArray.length; i++) {
+                    var row = document.createElement("div");
+                    row.setAttribute("class", "row");
+
+                    //Build cell
+                    for (var j = 0; j < boardArray[i].length; j++) {
+                        var cell = document.createElement("div");
+
+                        //Set data
+                        cell.setAttribute("data-x", i);
+                        cell.setAttribute("data-y", j);
+
+                        //Set classes
+                        if (boardArray[i][j].isRevealed) {
+                            cell.appendChild(document.createTextNode(boardArray[i][j].mineCount));
+                            cell.setAttribute("class", "cell revealed");
+                        } else if (boardArray[i][j].isFlagged) {
+                            cell.appendChild(document.createTextNode("F"));
+                            cell.setAttribute("class", "cell flagged");
+                        } else {
+                            cell.setAttribute("class", "cell unknown");
+                        }
+
+                        //Set click handlers
+                        cell.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            this.handleCellClick = handleCellClick;
+                            return this.handleCellClick("click");
+                        });
+                        cell.addEventListener("contextmenu", function (e) {
+                            e.preventDefault();
+                            this.handleCellClick = handleCellClick;
+                            return this.handleCellClick("contextmenu");
+                        });
+                        row.appendChild(cell);
+                    }
+                    boardElement.appendChild(row);
+                }
+
+                //Set remaining mines
+                var remainingMineCountElement = document.getElementById("remaining-mine-count");
+                while (remainingMineCountElement.firstChild)
+                    remainingMineCountElement.removeChild(remainingMineCountElement.firstChild);
+                var remainingMineCount = minesweeperEngine.getRemainingMineCount();
+                remainingMineCountElement.appendChild(document.createTextNode(remainingMineCount));
+            }
+
+            function handleCellClick(event) {
+
+                //Get coordinates
+                var x = Number(this.getAttribute("data-x"));
+                var y = Number(this.getAttribute("data-y"));
+
+                //Left click
+                if (event === 'click') {
+                    try {
+                        minesweeperEngine.revealSquare(x, y);
+                        generateBoardHtml();
+                    } catch (ex) {
+                        generateBoardHtml();
+                        alert(ex);
+                    }
+
+                    //Right click
+                } else if (event === 'contextmenu') {
+                    minesweeperEngine.toggleFlag(x, y);
+                    generateBoardHtml();
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>
