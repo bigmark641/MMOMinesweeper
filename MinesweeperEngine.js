@@ -10,8 +10,8 @@ function MinesweeperEngine() {
     ////////////////////////////// 
 
     var NUMBER_OF_MINES = 400;
-    var BOARD_WIDTH = 32;
-    var BOARD_HEIGHT = 60;
+    var BOARD_WIDTH = 60;
+    var BOARD_HEIGHT = 32;
     var RESET_RADIUS = 8;
     var REVEAL_RADIUS = 1;
     var MINE_COUNT_RADIUS = 1;
@@ -29,40 +29,42 @@ function MinesweeperEngine() {
     //////////////////////////
 
     self.revealSquare = function (x, y) {
+        if (!board[x][y].isFlagged) {
 
-        //Initialize board if first revealed square
-        var revealedSquares = 0
-        for (var i = 0; i < BOARD_WIDTH; i++)
-            for (var j = 0; j < BOARD_HEIGHT; j++)
-                if (board[i][j].isRevealed)
-                    revealedSquares++;
-        if (revealedSquares === 0)
-            initializeBoard(x, y);
-
-        //Handle mine
-        if (board[x][y].isMine) {
-            resetArea(x, y);
-        } else {
-
-            //Reveal square
-            board[x][y].isRevealed = true;
-            board[x][y].isFlagged = false;
-
-            //Reveal surrounding squares
-            if (board[x][y].mineCount === 0)
-                for (var i = getSurroundingMinX(x, REVEAL_RADIUS); i <= getSurroundingMaxX(x, REVEAL_RADIUS); i++)
-                    for (var j = getSurroundingMinY(y, REVEAL_RADIUS); j <= getSurroundingMaxY(y, REVEAL_RADIUS); j++)
-                        if (!board[i][j].isRevealed)
-                            self.revealSquare(i, j);
-
-            //Handle win
-            var unrevealedEmptySquares = 0
+            //Initialize board if first revealed square
+            var revealedSquares = 0
             for (var i = 0; i < BOARD_WIDTH; i++)
                 for (var j = 0; j < BOARD_HEIGHT; j++)
-                    if (!board[i][j].isRevealed && !board[i][j].isMine)
-                        unrevealedEmptySquares++;
-            if (unrevealedEmptySquares === 0) {
-                throw "You win!!!";
+                    if (board[i][j].isRevealed)
+                        revealedSquares++;
+            if (revealedSquares === 0)
+                initializeBoard(x, y);
+
+            //Handle mine
+            if (board[x][y].isMine) {
+                resetArea(x, y);
+            } else {
+
+                //Reveal square
+                board[x][y].isRevealed = true;
+                board[x][y].isFlagged = false;
+
+                //Reveal surrounding squares
+                if (board[x][y].mineCount === 0)
+                    for (var i = getSurroundingMinX(x, REVEAL_RADIUS); i <= getSurroundingMaxX(x, REVEAL_RADIUS); i++)
+                        for (var j = getSurroundingMinY(y, REVEAL_RADIUS); j <= getSurroundingMaxY(y, REVEAL_RADIUS); j++)
+                            if (!board[i][j].isRevealed)
+                                self.revealSquare(i, j);
+
+                //Handle win
+                var unrevealedEmptySquares = 0
+                for (var i = 0; i < BOARD_WIDTH; i++)
+                    for (var j = 0; j < BOARD_HEIGHT; j++)
+                        if (!board[i][j].isRevealed && !board[i][j].isMine)
+                            unrevealedEmptySquares++;
+                if (unrevealedEmptySquares === 0) {
+                    throw "You win!!!";
+                }
             }
         }
     };
