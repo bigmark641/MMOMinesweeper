@@ -9,10 +9,10 @@ function MinesweeperEngine() {
     // PRIVATE MEMBER CONSTANTS //
     ////////////////////////////// 
 
-    var NUMBER_OF_MINES = 99;
-    var BOARD_WIDTH = 16;
-    var BOARD_HEIGHT = 30;
-    var RESET_RADIUS = 5;
+    var NUMBER_OF_MINES = 400;
+    var BOARD_WIDTH = 32;
+    var BOARD_HEIGHT = 60;
+    var RESET_RADIUS = 8;
     var REVEAL_RADIUS = 1;
     var MINE_COUNT_RADIUS = 1;
 
