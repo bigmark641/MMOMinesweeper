@@ -1,0 +1,22 @@
+{
+  "name": "mmominesweeper",
+  "version": "0.1.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bigmark641/MMOMinesweeper.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/bigmark641/MMOMinesweeper/issues"
+  },
+  "homepage": "https://github.com/bigmark641/MMOMinesweeper#readme",
+  "dependencies": {
+    "socket.io": "^2.0.4"
+  }
+}

@@ -1,0 +1,47 @@
+<html>
+
+<head>
+
+    <title>MMOMinesweeper</title>
+    <style>
+        #login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        #gameboard {
+            display: none;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket;
+
+        function joinGame() {
+            socket = io.connect();
+
+            let username = document.getElementById("username").value;
+            let dataobject = {};
+            dataobject.username = username;
+            socket.emit('client_login', dataobject);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="login-wrapper">
+        <div id="login">
+            <h1>MMOMinesweeper</h1>
+            <p>Yeah, I know, why? But still...</p>
+            <input type="text" placeholder="Enter Username" id="username">
+            <button id="join" onclick="joinGame()">Join Game!</button>
+        </div>
+    </div>
+    <div id="gameboard">
+
+    </div>
+</body>
+
+</html>
