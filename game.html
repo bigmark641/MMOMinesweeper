@@ -13,6 +13,31 @@
 
         #gameboard {
             display: none;
+            height: 100%;
+            width: 100%;
+
+        }
+
+        #game-canvas {
+        }
+
+        #message {
+            position: fixed;
+            bottom: 15px;
+            height: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #server-message {
+            background-color: white;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
         }
     </style>
     <script src="/socket.io/socket.io.js"></script>
@@ -20,17 +45,71 @@
         var socket;
 
         function joinGame() {
-            socket = io.connect();
+            if (socket == null) {
+                socket = io.connect();
+            }
 
             let username = document.getElementById("username").value;
             let dataobject = {};
             dataobject.username = username;
             socket.emit('client_login', dataobject);
+
+            setupListeners();
+
+            document.getElementById("login-wrapper").style.display = "none";
+            document.getElementById("gameboard").style.display = "block";
+
+            let canvas = document.getElementById("game-canvas");
+
+
+
+      
+
+            canvas.addEventListener("mousemove", function (e) {
+                
+                let x = e.clientX// - canvas.offsetLeft;
+                let y = e.clientY //- canvas.offsetTop;
+                console.log(x,y);
+                var context = canvas.getContext("2d");
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.beginPath();
+                context.arc(x, y, 5, 0, 2 * Math.PI, false);
+                context.fillStyle = 'green';
+                context.fill();
+                context.lineWidth = 1;
+                context.strokeStyle = '#003300';
+                context.stroke();
+
+                context.font = "10px Arial";
+                context.fillText("Hello World",x+10,y);
+            }, false);
+
         }
+
+        function setupListeners() {
+            socket.on('message', (data) => {
+                document.getElementById('server-message').style.display = "block";
+                document.getElementById('server-message').innerHTML = data.message;
+                setTimeout(() => {
+                    document.getElementById('server-message').innerHTML = "";
+                    document.getElementById('server-message').style.display = "none";
+                }, 4000);
+            });
+
+            //clientMove
+
+            //clientClick
+        }
+
+
+
     </script>
 </head>
 
 <body>
+    <div id="message">
+        <span id="server-message"></span>
+    </div>
     <div id="login-wrapper">
         <div id="login">
             <h1>MMOMinesweeper</h1>
@@ -40,7 +119,7 @@
         </div>
     </div>
     <div id="gameboard">
-
+        <canvas id="game-canvas" width=600px height=400px></canvas>
     </div>
 </body>
 

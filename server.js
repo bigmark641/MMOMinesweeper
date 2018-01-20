@@ -37,17 +37,38 @@ server.listen(8001);
 //socket stuff
 var io = require('socket.io').listen(server);
 
-io.sockets.on('connection', (client) => {
-    process.stdout.write("New Connection: " + client.id + "\n");
-    console.log("New Connection: ", client);
+var users = [];
 
+io.sockets.on('connection', (socket) => {
+    console.log("New Connection: ", socket.id);
+    
     //recieve client data
-    client.on('client_login', (data) => {
-        console.log("logindata", data);
-        process.stdout.write(data.username);
+    socket.on('client_login', (data) => {
+        let newUser = {id:socket.id, username:data.username};
+        users.push(newUser);
+        //emit just goes to one client/socket
+        socket.emit('message', {'message':"Successfully Joined The Game!"});
+        //broadcast goes to everyone else
+        socket.broadcast.emit('message', {'message': data.username + " Joined The Game!"});
+        //this broadcasts to EVERYONE including client;
+        io.sockets.emit('message', {'message': "Everyone!"});
+        //this logs to node console
+        console.log("New Client Logged In: ", newUser);
     });
 
-    client.on('disconnect', () => {
-        console.log('Client disconnected: ' + client.id);
+    socket.on('client_move', (data) => {
+        console.log("client moved:", data);
     });
+
+    socket.on('client_click', (data) => {
+        console.log("client clicked", data);
+    });
+
+    socket.on('disconnect', () => {
+        users = users.splice(users.indexOf(users.filter(f=>f.id === socket.id)),1);
+        console.log('Client disconnected: ' + socket.id);
+    });
+
+
+
 });
