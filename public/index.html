@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <script src="javascripts/MinesweeperEngine.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         #board {
             margin-top: 50px;
@@ -59,49 +59,59 @@
     <script>
         (function () {
 
+            //Initialize socket
+            var socket = io.connect();
+
+            //Initialize remote function handlers
+            socket.on('setBoardData', function (data) {
+                displayBoardHtml(data.revealedBoard, data.remainingMineCount);
+            });
+            socket.on('win', function (data) {
+                alert('You win!!!');
+            });
+
             //Initialize game
             var boardElement = document.getElementById('board');
-            var minesweeperEngine = new MinesweeperEngine();
-            generateBoardHtml();
+            socket.emit('getBoardData');
 
-            
-            function generateBoardHtml() {
+
+            function displayBoardHtml(revealedBoard, remainingMineCount) {
 
                 //Get board data
-                var boardArray = minesweeperEngine.getRevealedBoard();
-                boardElement.setAttribute("style", "width: " + 52 * boardArray.length + "px");
-                
+                var boardArray = revealedBoard;
+                boardElement.setAttribute('style', 'width: ' + 52 * boardArray.length + 'px');
+
                 //Initialize empty board
                 if (!Boolean(boardElement.firstElementChild)) {
 
                     //Build row
                     for (var y = 0; y < boardArray[0].length; y++) {
-                        var rowElement = document.createElement("div");
-                        rowElement.setAttribute("class", "row");
+                        var rowElement = document.createElement('div');
+                        rowElement.setAttribute('class', 'row');
 
                         //Build cell
                         for (var x = 0; x < boardArray.length; x++) {
-                            var cellElement = document.createElement("div");
+                            var cellElement = document.createElement('div');
 
                             //Set data
-                            cellElement.setAttribute("data-x", x);
-                            cellElement.setAttribute("data-y", y);
+                            cellElement.setAttribute('data-x', x);
+                            cellElement.setAttribute('data-y', y);
 
                             //Set class
-                            cellElement.setAttribute("class", "cell unknown");
+                            cellElement.setAttribute('class', 'cell unknown');
 
                             //Set text
-                            var textElement = document.createTextNode("");
+                            var textElement = document.createTextNode('');
 
                             //Set click handlers
-                            cellElement.addEventListener("click", function (e) {
+                            cellElement.addEventListener('click', function (e) {
                                 e.preventDefault();
-                                handleCellClick.call(this, "click");
+                                handleCellClick.call(this, 'click');
                                 return false;
                             });
-                            cellElement.addEventListener("contextmenu", function (e) {
+                            cellElement.addEventListener('contextmenu', function (e) {
                                 e.preventDefault();
-                                handleCellClick.call(this, "contextmenu");
+                                handleCellClick.call(this, 'contextmenu');
                                 return false;
                             });
 
@@ -123,17 +133,17 @@
                         var cellClass;
                         var cellText;
                         if (boardArray[x][y].isRevealed) {
-                            cellClass = "cell revealed";
+                            cellClass = 'cell revealed';
                             cellText = boardArray[x][y].mineCount;
                         } else if (boardArray[x][y].isFlagged) {
-                            cellClass = "cell flagged";
-                            cellText = "F";
+                            cellClass = 'cell flagged';
+                            cellText = 'F';
                         } else {
-                            cellClass = "cell unknown";
-                            cellText = "";
+                            cellClass = 'cell unknown';
+                            cellText = '';
                         }
-                        if (cellElement.getAttribute("class") !== cellClass)
-                            cellElement.setAttribute("class", cellClass);
+                        if (cellElement.getAttribute('class') !== cellClass)
+                            cellElement.setAttribute('class', cellClass);
                         if (cellElement.childNodes[0].textContent !== cellText) {
                             cellElement.removeChild(cellElement.childNodes[0]);
                             cellElement.appendChild(document.createTextNode(cellText));
@@ -142,34 +152,33 @@
                 }
 
                 //Set remaining mines
-                var remainingMineCountElement = document.getElementById("remaining-mine-count");
+                var remainingMineCountElement = document.getElementById('remaining-mine-count');
                 while (remainingMineCountElement.firstChild)
                     remainingMineCountElement.removeChild(remainingMineCountElement.firstChild);
-                var remainingMineCount = minesweeperEngine.getRemainingMineCount();
                 remainingMineCountElement.appendChild(document.createTextNode(remainingMineCount));
             }
-            
+
 
             function handleCellClick(event) {
 
                 //Get coordinates
-                var x = Number(this.getAttribute("data-x"));
-                var y = Number(this.getAttribute("data-y"));
+                var x = Number(this.getAttribute('data-x'));
+                var y = Number(this.getAttribute('data-y'));
 
                 //Left click
                 if (event === 'click') {
-                    try {
-                        minesweeperEngine.revealSquare(x, y);
-                        generateBoardHtml();
-                    } catch (ex) {
-                        generateBoardHtml();
-                        alert(ex);
-                    }
+                    socket.emit('revealSquare', {
+                        x: x,
+                        y: y
+                    });
+                }
 
-                    //Right click
-                } else if (event === 'contextmenu') {
-                    minesweeperEngine.toggleFlag(x, y);
-                    generateBoardHtml();
+                //Right click
+                else if (event === 'contextmenu') {
+                    socket.emit('toggleFlag', {
+                        x: x,
+                        y: y
+                    });
                 }
             }
         })();

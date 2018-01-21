@@ -1,7 +1,6 @@
-"use strict";
+module.exports = new minesweeperEngine();
 
-
-function MinesweeperEngine() {
+function minesweeperEngine () {
     var self = this;
 
 
@@ -9,7 +8,7 @@ function MinesweeperEngine() {
     // PRIVATE MEMBER CONSTANTS //
     ////////////////////////////// 
 
-    var NUMBER_OF_MINES = 400;
+    var NUMBER_OF_MINES = 40;
     var BOARD_WIDTH = 60;
     var BOARD_HEIGHT = 32;
     var RESET_RADIUS = 8;
@@ -63,7 +62,7 @@ function MinesweeperEngine() {
                         if (!board[i][j].isRevealed && !board[i][j].isMine)
                             unrevealedEmptySquares++;
                 if (unrevealedEmptySquares === 0) {
-                    throw "You win!!!";
+                    throw 'You win!!!';
                 }
             }
         }
