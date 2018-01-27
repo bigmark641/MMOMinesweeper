@@ -4,9 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+var app = require('../app/expressConfig');
 var debug = require('debug')('mmominesweeper:server');
 var http = require('http');
+var httpExtensions = require('../app/httpExtensions');
 
 /**
  * Get port from environment and store in Express.
@@ -88,3 +89,9 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+/**
+ * Initialize extensions
+ */
+
+ httpExtensions.init(server);

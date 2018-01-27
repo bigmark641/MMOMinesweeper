@@ -1,0 +1,44 @@
+#board {
+  margin-top: 50px;
+}
+
+#board .row {
+  display: table-row;
+}
+
+#board .row .cell {
+  display: table-cell;
+  height: 50px;
+  width: 50px;
+  border: 1px solid black;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 36px;
+}
+
+#board .row .cell.unknown {
+  background-color: lightblue;
+}
+
+#board .row .cell.flagged {
+  background-color: yellow;
+  color: red;
+}
+
+#board .row .cell.revealed {
+  background-color: white;
+}
+
+#remaining-mines {
+  position: fixed;
+  top: 0px;
+  left: 44%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 6px;
+  background: rgba(255, 255, 255, .5);
+  border: 2px solid black;
+  color: red;
+  font-size: 30px;
+  font-weight: bold;
+}

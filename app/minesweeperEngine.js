@@ -1,13 +1,12 @@
-"use strict";
+module.exports = new minesweeperEngine();
 
-
-function MinesweeperEngine() {
+function minesweeperEngine () {
     var self = this;
 
 
-    //////////////////////////////
-    // PRIVATE MEMBER CONSTANTS //
-    ////////////////////////////// 
+    /**
+     * PRIVATE MEMBER CONSTANTS
+     */
 
     var NUMBER_OF_MINES = 400;
     var BOARD_WIDTH = 60;
@@ -17,16 +16,16 @@ function MinesweeperEngine() {
     var MINE_COUNT_RADIUS = 1;
 
 
-    //////////////////////////////
-    // PRIVATE MEMBER VARIABLES //
-    //////////////////////////////
+    /**
+     * PRIVATE MEMBER VARIABLES
+     */
 
     var board = [];
 
 
-    //////////////////////////
-    // PUBLIC FUNCTIONALITY // 
-    //////////////////////////
+    /**
+     * PUBLIC FUNCTIONALITY
+     */
 
     self.revealSquare = function (x, y) {
         if (!board[x][y].isFlagged) {
@@ -63,7 +62,7 @@ function MinesweeperEngine() {
                         if (!board[i][j].isRevealed && !board[i][j].isMine)
                             unrevealedEmptySquares++;
                 if (unrevealedEmptySquares === 0) {
-                    throw "You win!!!";
+                    throw 'win';
                 }
             }
         }
@@ -112,18 +111,18 @@ function MinesweeperEngine() {
     };
 
 
-    //////////////////////
-    // CONSTRUCTOR CODE //
-    //////////////////////
+    /**
+     * CONSTRUCTOR CODE
+     */
 
     (function () {
         initializeEmptyBoard();
     })();
 
 
-    /////////////////////
-    // PRIVATE METHODS //
-    /////////////////////
+    /**
+     * PRIVATE METHODS
+     */
 
     function initializeBoard(firstX, firstY) {
         do {
